@@ -1,7 +1,8 @@
 import { Router, Request, Response } from "express";
 import { body, validationResult } from "express-validator";
+
 import Task, { ITask } from "../models/task";
-import { ObjectId } from "mongoose";
+import User, { IUser } from "../models/user";
 
 //* Router initialization
 const router = Router();
@@ -17,13 +18,13 @@ const taskValidationRules = [
 
 ////////////////////////////////////////////////////////////////
 //? GET - Get all tasks
-router.get("/", async (req: Request, res: Response) => {
-	try {
-		const tasks = await Task.find();
-		res.json(tasks);
-	} catch (error: any) {
-		res.status(500).send("Server Error");
-	}
+router.get('/user/:userId', async (req: Request, res: Response) => {
+    try {
+        const tasks = await Task.find({ user: req.params.userId });
+        res.json(tasks);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
 });
 
 ////////////////////////////////////////////////////////////////
@@ -43,27 +44,34 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 ////////////////////////////////////////////////////////////////
 //? POST - Create a task
-router.post("/", taskValidationRules, async (req: Request, res: Response) => {
-	const errors = validationResult(req);
+router.post('/', taskValidationRules, async (req: Request, res: Response) => {
+    const errors = validationResult(req);
 
-	if (!errors.isEmpty()) {
-		return res.status(400).json({ errors: errors.array() });
-	}
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
 
-	const { title, description, completed } = req.body;
+    const { title, description, completed, userId } = req.body;
 
-	try {
-		const newTask: ITask = new Task({
-			title,
-			description,
-			completed,
-		});
+    try {
+        const user: IUser | null = await User.findById(userId);
 
-		const task = await newTask.save();
-		res.status(201).json(task);
-	} catch (error: any) {
-		res.status(500).send("Server Error");
-	}
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
+        const newTask: ITask = new Task({
+            title,
+            description,
+            completed,
+            user: user._id,
+        });
+
+        const task = await newTask.save();
+        res.status(201).json(task);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
 });
 
 ////////////////////////////////////////////////////////////////

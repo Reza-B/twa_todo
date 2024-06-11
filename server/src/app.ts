@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import connectDB from "./config/db";
 import taskRoutes from "./routes/tasks";
+import userRoutes from './routes/users'
 
 connectDB();
 
@@ -12,6 +13,7 @@ app.use(express.json());
 
 // //? Define Routes
 app.use("/api/tasks", taskRoutes);
+app.use('/api/user', userRoutes);
 
 // //? Error handling middleware
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
@@ -22,8 +24,3 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, () => {
 	console.log(`Server running at http://localhost:${port}`);
 });
-
-
-//TODO:
-// add user
-// multi user
